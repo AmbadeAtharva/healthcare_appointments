@@ -5,31 +5,67 @@ const gremlin = require('gremlin');
 const { DriverRemoteConnection } = gremlin.driver;
 const { Graph } = gremlin.structure;
 
-// Neptune endpoint
-const NEPTUNE_HOST = 'db-neptune-1.cluster-cqt62osoynt7.us-east-1.neptune.amazonaws.com';
-const NEPTUNE_PORT = 8182;
-
-const gremlinUrl = `wss://${NEPTUNE_HOST}:${NEPTUNE_PORT}/gremlin`;
+const NEPTUNE_ENDPOINT = 'wss://db-neptune-1-instance-1.cqt62osoynt7.us-east-1.neptune.amazonaws.com:8182/gremlin';
 
 const getTraversal = () => {
-  const connection = new DriverRemoteConnection(gremlinUrl, {
+  const connection = new DriverRemoteConnection(NEPTUNE_ENDPOINT, {
     mimeType: 'application/vnd.gremlin-v2.0+json',
-    pingEnabled: false, // Neptune doesn’t support WebSocket ping
+    pingEnabled: false,
   });
   const graph = new Graph();
   return graph.traversal().withRemote(connection);
 };
 
-// Example route to fetch all patients
+
+
+module.exports = router;
+
+
+// -------------- Get queries --------------
+
+// insert Dummy data
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/init-data
+const __ = gremlin.process.statics;
+router.get('/init-data', async (req, res) => {
+  try {
+    const g = getTraversal();
+    const results = [];
+
+    // Create patients
+    const alice = await g.addV('patient').property('name', 'Alice').property('age', 30).next();
+    const bob = await g.addV('patient').property('name', 'Bob').property('age', 45).next();
+
+    // Create doctors
+    const smith = await g.addV('doctor').property('name', 'Dr. Smith').property('specialty', 'Cardiology').next();
+    const lee = await g.addV('doctor').property('name', 'Dr. Lee').property('specialty', 'Dermatology').next();
+
+    // Appointments using __.V() for anonymous child traversal
+    results.push(await g.V(alice.value.id).addE('hasAppointment').to(__.V(smith.value.id)).property('date', '2025-05-10').property('time', '10:00 AM').next());
+    results.push(await g.V(bob.value.id).addE('hasAppointment').to(__.V(lee.value.id)).property('date', '2025-05-12').property('time', '2:00 PM').next());
+
+    res.json({ message: 'Inserted patients, doctors, and appointments', results });
+  } catch (err) {
+    console.error('Insert error:', err);
+    res.status(500).json({ error: 'Failed to insert data', details: err.message });
+  }
+});
+
+// GET /api/graph/patients
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/patients
 router.get('/patients', async (req, res) => {
   try {
     const g = getTraversal();
-    const results = await g.V().hasLabel('patient').toList();
-    const simplified = results.map(v => ({
-      id: v.id,
-      label: v.label,
-      properties: v.properties,
+
+    // Fetch all patient vertices with properties
+    const results = await g.V().hasLabel('patient').valueMap(true).toList();
+
+    const simplified = results.map(entry => ({
+      id: entry.id,
+      label: entry.label,
+      name: entry.name ? entry.name[0] : '',
+      age: entry.age ? entry.age[0] : ''
     }));
+
     res.json(simplified);
   } catch (err) {
     console.error('Gremlin error:', err);
@@ -37,4 +73,150 @@ router.get('/patients', async (req, res) => {
   }
 });
 
-module.exports = router;
+// GET all doctors
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/doctors
+router.get('/doctors', async (req, res) => {
+  try {
+    const g = getTraversal();
+    const results = await g.V().hasLabel('doctor').valueMap(true).toList();
+
+    const simplified = results.map(entry => ({
+      id: entry.id,
+      label: entry.label,
+      name: entry.name ? entry.name[0] : '',
+      specialty: entry.specialty ? entry.specialty[0] : ''
+    }));
+
+    res.json(simplified);
+  } catch (err) {
+    console.error('Gremlin error (doctors):', err);
+    res.status(500).json({ error: 'Failed to fetch doctors' });
+  }
+});
+
+// GET all appointments with patient + doctor + time
+// http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments
+router.get('/appointments', async (req, res) => {
+  try {
+    const g = getTraversal();
+
+    const results = await g.E()
+      .hasLabel('hasAppointment')
+      .project('appointmentId', 'date', 'time', 'patient', 'doctor')
+      .by(__.id())
+      .by(__.values('date'))
+      .by(__.values('time'))
+      .by(__.outV().values('name'))
+      .by(__.inV().values('name'))
+      .toList();
+
+    if (!results.length) {
+      return res.json({ message: 'No appointments found', data: [] });
+    }
+
+    res.json({ message: 'Appointments fetched successfully', data: results });
+  } catch (err) {
+    console.error('Gremlin error (appointments):', err);
+    res.status(500).json({ error: 'Failed to fetch appointments', details: err.message });
+  }
+});
+
+
+// -------- Post Queries ----------
+
+// Add Data Dynamically
+router.post('/appointments', async (req, res) => {
+  try {
+    const g = getTraversal();
+    const { patientName, doctorName, date, time } = req.body;
+
+    if (!patientName || !doctorName || !date || !time) {
+      return res.status(400).json({ error: 'All fields (patientName, doctorName, date, time) are required.' });
+    }
+
+    const __ = gremlin.process.statics;
+
+    // Get patient and doctor vertices by name
+    const patient = await g.V().has('patient', 'name', patientName).next();
+    const doctor = await g.V().has('doctor', 'name', doctorName).next();
+
+    if (!patient.value || !doctor.value) {
+      return res.status(404).json({
+        error: 'Patient or Doctor not found.',
+        details: {
+          patientFound: !!patient.value,
+          doctorFound: !!doctor.value
+        }
+      });
+    }
+
+    // Create the appointment edge
+    const result = await g.V(patient.value.id)
+      .addE('hasAppointment')
+      .to(__.V(doctor.value.id))
+      .property('date', date)
+      .property('time', time)
+      .next();
+
+    res.status(201).json({ message: 'Appointment created successfully.', edge: result.value });
+  } catch (err) {
+    console.error('Insert appointment error:', err);
+    res.status(500).json({ error: 'Failed to create appointment.', details: err.message });
+  }
+});
+
+
+
+// -------- Drop Queries ----------
+
+// Reset Patients Data
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/reset-patients
+router.get('/reset-patients', async (req, res) => {
+  try {
+    const g = getTraversal();
+    await g.V().hasLabel('patient').drop().iterate();
+    res.send('All patient nodes deleted.');
+  } catch (err) {
+    console.error('Reset error:', err);
+    res.status(500).send('Failed to reset patients.');
+  }
+});
+
+// Reset Doctors Data
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/reset-doctors
+router.get('/reset-doctors', async (req, res) => {
+  try {
+    const g = getTraversal();
+    await g.V().hasLabel('doctor').drop().iterate();
+    res.send('All doctor nodes deleted.');
+  } catch (err) {
+    console.error('Reset error:', err);
+    res.status(500).send('Failed to reset doctors.');
+  }
+});
+
+// Reset Appointments Data
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/reset-appointments
+router.get('/reset-appointments', async (req, res) => {
+  try {
+    const g = getTraversal();
+    await g.E().hasLabel('hasAppointment').drop().iterate();
+    res.send('All appointment edges deleted.');
+  } catch (err) {
+    console.error('Reset error:', err);
+    res.status(500).send('Failed to reset appointments.');
+  }
+});
+
+// Reset All Data
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/reset-all
+router.get('/reset-all', async (req, res) => {
+  try {
+    const g = getTraversal();
+    await g.V().drop().iterate();
+    res.send('All vertices deleted.');
+  } catch (err) {
+    console.error('Reset error:', err);
+    res.status(500).send('Failed to reset graph.');
+  }
+});

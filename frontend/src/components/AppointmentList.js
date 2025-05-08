@@ -7,7 +7,7 @@ export default function AppointmentList() {
   useEffect(() => {
     async function fetchAppointments() {
       try {
-        const res = await axios.get('http://localhost:5001/api/appointments');
+        const res = await axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments');
         setAppointments(res.data);
       } catch (err) {
         console.error('Error fetching appointments', err);
