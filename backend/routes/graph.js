@@ -159,30 +159,37 @@ router.post('/appointments', async (req, res) => {
       return res.status(400).json({ error: 'All fields (patientName, doctorName, date, time) are required.' });
     }
 
-    const __ = gremlin.process.statics;
+        // Required for Gremlin statics
+        const __ = gremlin.process.statics;
 
-    // Normalize input names for case-insensitive match
-    const normalizedPatient = patientName.trim().toLowerCase();
-    const normalizedDoctor = doctorName.trim().toLowerCase();
-
-    // Find patient
-    const patientList = await g.V().has('patient', 'name', normalizedPatient).toList();
-
-    // Find doctor
-    const doctorList = await g.V().has('doctor', 'name', normalizedDoctor).toList();
-
-    console.log('Patient Lookup Result:', patientList);
-    console.log('Doctor Lookup Result:', doctorList);
-
-    if (patientList.length === 0 || doctorList.length === 0) {
-      return res.status(404).json({
-        error: 'Patient or Doctor not found.',
-        details: {
-          patientFound: patientList.length > 0,
-          doctorFound: doctorList.length > 0
+        // Normalize input names to lowercase
+        const normalizedPatient = patientName.trim().toLowerCase();
+        const normalizedDoctor = doctorName.trim().toLowerCase();
+    
+        // Lookup patients and doctors by lowercase matching
+        const patientList = await g.V().hasLabel('patient')
+          .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedPatient))
+          .toList();
+    
+        const doctorList = await g.V().hasLabel('doctor')
+          .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedDoctor))
+          .toList();
+    
+        // Debugging Output
+        console.log('Patient Lookup Result:', patientList);
+        console.log('Doctor Lookup Result:', doctorList);
+    
+        // Validate presence
+        if (patientList.length === 0 || doctorList.length === 0) {
+          return res.status(404).json({
+            error: 'Patient or Doctor not found.',
+            details: {
+              patientFound: patientList.length > 0,
+              doctorFound: doctorList.length > 0
+            }
+          });
         }
-      });
-    }
+    
 
     const patient = patientList[0];
     const doctor = doctorList[0];
