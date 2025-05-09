@@ -4,7 +4,6 @@ const gremlin = require('gremlin');
 
 const { DriverRemoteConnection } = gremlin.driver;
 const { Graph } = gremlin.structure;
-const { patientName, doctorName, date, time, location } = req.body;
 
 
 const NEPTUNE_ENDPOINT = 'wss://db-neptune-1-instance-1.cqt62osoynt7.us-east-1.neptune.amazonaws.com:8182/gremlin';
@@ -156,7 +155,7 @@ router.get('/appointments', async (req, res) => {
 router.post('/appointments', async (req, res) => {
   try {
     const g = getTraversal();
-    const { patientName, doctorName, date, time } = req.body;
+    const { patientName, doctorName, date, time, location } = req.body;
 
     if (!patientName || !doctorName || !date || !time) {
       return res.status(400).json({ error: 'All fields (patientName, doctorName, date, time) are required.' });
@@ -166,7 +165,7 @@ router.post('/appointments', async (req, res) => {
         const __ = gremlin.process.statics;
 
         const allPatients = await g.V().hasLabel('patient').valueMap(true).toList();
-const allDoctors = await g.V().hasLabel('doctor').valueMap(true).toList();
+        const allDoctors = await g.V().hasLabel('doctor').valueMap(true).toList();
 
 // Normalize inputs for comparison
 const normalizedPatient = patientName.trim().toLowerCase();
