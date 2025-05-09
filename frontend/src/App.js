@@ -30,6 +30,9 @@ import React, { useState } from 'react';
 import ScheduleAppointment from './components/ScheduleAppointment';
 import AppointmentList from './components/AppointmentList';
 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function App() {
   const [refreshFlag, setRefreshFlag] = useState(0);
 
@@ -42,6 +45,7 @@ function App() {
       <h1 className="text-xl font-bold">Healthcare Scheduler</h1>
       <ScheduleAppointment onScheduled={handleScheduled} />
       <AppointmentList refreshFlag={refreshFlag} /> {/* << Corrected here */}
+      <ToastContainer position="top-center" />
     </div>
   );
 }

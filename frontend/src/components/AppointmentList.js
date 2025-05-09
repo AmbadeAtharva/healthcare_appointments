@@ -22,15 +22,21 @@ export default function AppointmentList({ refreshFlag }) {
   };
 
   const handleDelete = async (appointmentId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this appointment?');
+    if (!confirmDelete) return;
+
     try {
       await axios.delete(`http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments/${appointmentId}`);
       setAppointments(prev => prev.filter(a => a.appointmentId !== appointmentId));
+      toast.success('Appointment deleted successfully.');
+      onRefresh();  // Trigger list refresh
     } catch (error) {
       console.error('Failed to delete appointment', error);
+      toast.error('Failed to delete appointment.');
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment => {
+    const filteredAppointments = appointments.filter(appointment => {
     const matchPatient = patientFilter === '' || appointment.patient.toLowerCase().includes(patientFilter.toLowerCase());
     const matchDoctor = doctorFilter === '' || appointment.doctor.toLowerCase().includes(doctorFilter.toLowerCase());
     const matchDate = dateFilter === '' || appointment.date === dateFilter;

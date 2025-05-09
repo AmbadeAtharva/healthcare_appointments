@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function ScheduleAppointment({ onScheduled }) {
   const [patientName, setPatientName] = useState('');
@@ -33,7 +34,7 @@ function ScheduleAppointment({ onScheduled }) {
     e.preventDefault();
 
     if (!patientName || !doctorName || !date || !time) {
-      setMessage('Please fill out all fields.');
+      toast.success('Please fill out all fields.');
       return;
     }
 
@@ -52,13 +53,11 @@ function ScheduleAppointment({ onScheduled }) {
         payload
       );
 
-      setMessage(response.data.message || 'Appointment created.');
+      toast.success('Appointment created successfully.');;
       onScheduled(); // Refresh list
     } catch (error) {
       console.error(error);
-      setMessage(
-        error.response?.data?.error || 'Failed to schedule appointment.'
-      );
+      toast.error('Failed to schedule appointment.');
     }
   };
 
