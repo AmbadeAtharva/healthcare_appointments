@@ -3,44 +3,64 @@ import axios from 'axios';
 
 export default function AppointmentList({ refreshFlag }) {
   const [appointments, setAppointments] = useState([]);
-
-  const fetchAppointments = async () => {
-    try {
-      const res = await axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments');
-      setAppointments(res.data.data || []);
-    } catch (err) {
-      console.error('Error fetching appointments', err);
-    }
-  };
+  const [patientFilter, setPatientFilter] = useState('');
+  const [doctorFilter, setDoctorFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
+    async function fetchAppointments() {
+      try {
+        const res = await axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments');
+        setAppointments(res.data.data || []);
+      } catch (err) {
+        console.error('Error fetching appointments', err);
+      }
+    }
+
     fetchAppointments();
   }, [refreshFlag]);
 
-  const handleDelete = async (appointmentId) => {
-    try {
-      await axios.delete(`http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments/${appointmentId}`);
-      fetchAppointments();  // Refresh the list after deletion
-    } catch (err) {
-      console.error('Error deleting appointment', err);
-    }
-  };
+  const filteredAppointments = appointments.filter(appointment => {
+    const matchPatient = patientFilter === '' || appointment.patient.toLowerCase().includes(patientFilter.toLowerCase());
+    const matchDoctor = doctorFilter === '' || appointment.doctor.toLowerCase().includes(doctorFilter.toLowerCase());
+    const matchDate = dateFilter === '' || appointment.date === dateFilter;
+    return matchPatient && matchDoctor && matchDate;
+  });
 
   return (
     <div className="appointment-list">
-      <h2>Scheduled Appointments ({appointments.length})</h2>
-      {Array.isArray(appointments) && appointments.length > 0 ? (
-        appointments.map((appointment) => (
-          <div className="appointment-item" key={appointment.appointmentId} style={{ border: '1px solid #ccc', padding: '8px', marginBottom: '8px' }}>
+      <h2>Scheduled Appointments</h2>
+
+      <div style={{ marginBottom: '10px' }}>
+        <input
+          type="text"
+          placeholder="Filter by Patient Name"
+          value={patientFilter}
+          onChange={(e) => setPatientFilter(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by Doctor Name"
+          value={doctorFilter}
+          onChange={(e) => setDoctorFilter(e.target.value)}
+        />
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+        />
+      </div>
+
+      {filteredAppointments.length > 0 ? (
+        filteredAppointments.map((appointment) => (
+          <div className="appointment-item" key={appointment.appointmentId}>
             <strong>Patient:</strong> {appointment.patient}<br />
             <strong>Doctor:</strong> {appointment.doctor}<br />
-            <strong>Date:</strong> {appointment.date} {appointment.time}<br />
-            <strong>Location:</strong> {appointment.location || 'N/A'}<br />
-            <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', color: 'red' }}>Delete</button>
+            <strong>Date:</strong> {new Date(appointment.date).toLocaleString()}<br />
           </div>
         ))
       ) : (
-        <p>No appointments scheduled yet.</p>
+        <p>No appointments match the filter.</p>
       )}
     </div>
   );
