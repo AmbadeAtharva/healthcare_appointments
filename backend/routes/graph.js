@@ -124,7 +124,6 @@ router.get('/appointments', async (req, res) => {
 
 // -------- Post Queries ----------
 
-// Add Data Dynamically
 router.post('/appointments', async (req, res) => {
   try {
     const g = getTraversal();
@@ -136,24 +135,37 @@ router.post('/appointments', async (req, res) => {
 
     const __ = gremlin.process.statics;
 
-    // Get patient and doctor vertices by name
-    const patient = await g.V().has('patient', 'name', patientName).next();
-    const doctor = await g.V().has('doctor', 'name', doctorName).next();
+    // Normalize input names for case-insensitive match
+    const normalizedPatient = patientName.trim().toLowerCase();
+    const normalizedDoctor = doctorName.trim().toLowerCase();
 
-    if (!patient.value || !doctor.value) {
+    // Find patient
+    const patientList = await g.V().hasLabel('patient')
+      .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedPatient))
+      .toList();
+
+    // Find doctor
+    const doctorList = await g.V().hasLabel('doctor')
+      .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedDoctor))
+      .toList();
+
+    if (patientList.length === 0 || doctorList.length === 0) {
       return res.status(404).json({
         error: 'Patient or Doctor not found.',
         details: {
-          patientFound: !!patient.value,
-          doctorFound: !!doctor.value
+          patientFound: patientList.length > 0,
+          doctorFound: doctorList.length > 0
         }
       });
     }
 
+    const patient = patientList[0];
+    const doctor = doctorList[0];
+
     // Create the appointment edge
-    const result = await g.V(patient.value.id)
+    const result = await g.V(patient.id)
       .addE('hasAppointment')
-      .to(__.V(doctor.value.id))
+      .to(__.V(doctor.id))
       .property('date', date)
       .property('time', time)
       .next();
@@ -164,7 +176,6 @@ router.post('/appointments', async (req, res) => {
     res.status(500).json({ error: 'Failed to create appointment.', details: err.message });
   }
 });
-
 
 
 // -------- Drop Queries ----------
