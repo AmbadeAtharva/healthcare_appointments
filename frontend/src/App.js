@@ -34,17 +34,18 @@ function App() {
   const [refreshFlag, setRefreshFlag] = useState(0);
 
   const handleScheduled = () => {
-    setRefreshFlag((prev) => prev + 1);
+    setRefreshFlag((prev) => prev + 1);  // Triggers re-fetch in AppointmentList
   };
 
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold">Healthcare Scheduler</h1>
       <ScheduleAppointment onScheduled={handleScheduled} />
-      <AppointmentList key={refreshFlag} />
+      <AppointmentList refreshFlag={refreshFlag} /> {/* << Corrected here */}
     </div>
   );
 }
 
 export default App;
+
 
