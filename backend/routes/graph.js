@@ -171,6 +171,9 @@ router.post('/appointments', async (req, res) => {
     // Find doctor
     const doctorList = await g.V().has('doctor', 'name', normalizedDoctor).toList();
 
+    console.log('Patient Lookup Result:', patientList);
+    console.log('Doctor Lookup Result:', doctorList);
+
     if (patientList.length === 0 || doctorList.length === 0) {
       return res.status(404).json({
         error: 'Patient or Doctor not found.',
