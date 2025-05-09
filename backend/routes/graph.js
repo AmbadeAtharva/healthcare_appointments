@@ -31,17 +31,42 @@ router.get('/init-data', async (req, res) => {
     const g = getTraversal();
     const results = [];
 
-    // Create patients
-    const alice = await g.addV('patient').property('name', 'Alice').property('age', 30).next();
-    const bob = await g.addV('patient').property('name', 'Bob').property('age', 45).next();
+    // Create patients (names stored in lowercase)
+    const alice = await g.addV('patient')
+      .property('name', 'alice')
+      .property('age', 30)
+      .next();
 
-    // Create doctors
-    const smith = await g.addV('doctor').property('name', 'Dr. Smith').property('specialty', 'Cardiology').next();
-    const lee = await g.addV('doctor').property('name', 'Dr. Lee').property('specialty', 'Dermatology').next();
+    const bob = await g.addV('patient')
+      .property('name', 'bob')
+      .property('age', 45)
+      .next();
 
-    // Appointments using __.V() for anonymous child traversal
-    results.push(await g.V(alice.value.id).addE('hasAppointment').to(__.V(smith.value.id)).property('date', '2025-05-10').property('time', '10:00 AM').next());
-    results.push(await g.V(bob.value.id).addE('hasAppointment').to(__.V(lee.value.id)).property('date', '2025-05-12').property('time', '2:00 PM').next());
+    // Create doctors (names stored in lowercase)
+    const smith = await g.addV('doctor')
+      .property('name', 'dr. smith')
+      .property('specialty', 'Cardiology')
+      .next();
+
+    const lee = await g.addV('doctor')
+      .property('name', 'dr. lee')
+      .property('specialty', 'Dermatology')
+      .next();
+
+    // Add appointments using __.V()
+    results.push(await g.V(alice.value.id)
+      .addE('hasAppointment')
+      .to(__.V(smith.value.id))
+      .property('date', '2025-05-10')
+      .property('time', '10:00 AM')
+      .next());
+
+    results.push(await g.V(bob.value.id)
+      .addE('hasAppointment')
+      .to(__.V(lee.value.id))
+      .property('date', '2025-05-12')
+      .property('time', '2:00 PM')
+      .next());
 
     res.json({ message: 'Inserted patients, doctors, and appointments', results });
   } catch (err) {
@@ -49,6 +74,7 @@ router.get('/init-data', async (req, res) => {
     res.status(500).json({ error: 'Failed to insert data', details: err.message });
   }
 });
+
 
 // GET /api/graph/patients
 //http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/patients
@@ -140,14 +166,10 @@ router.post('/appointments', async (req, res) => {
     const normalizedDoctor = doctorName.trim().toLowerCase();
 
     // Find patient
-    const patientList = await g.V().hasLabel('patient')
-      .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedPatient))
-      .toList();
+    const patientList = await g.V().has('patient', 'name', normalizedPatient).toList();
 
     // Find doctor
-    const doctorList = await g.V().hasLabel('doctor')
-      .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedDoctor))
-      .toList();
+    const doctorList = await g.V().has('doctor', 'name', normalizedDoctor).toList();
 
     if (patientList.length === 0 || doctorList.length === 0) {
       return res.status(404).json({

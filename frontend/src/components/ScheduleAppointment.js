@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function ScheduleAppointment({ onScheduled }) {
@@ -7,6 +7,27 @@ function ScheduleAppointment({ onScheduled }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [message, setMessage] = useState('');
+
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+
+  // Fetch dropdown options
+  useEffect(() => {
+    async function fetchDropdownData() {
+      try {
+        const [pRes, dRes] = await Promise.all([
+          axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/patients'),
+          axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/doctors'),
+        ]);
+        setPatients(pRes.data);
+        setDoctors(dRes.data);
+      } catch (err) {
+        console.error('Failed to load dropdown options:', err);
+      }
+    }
+
+    fetchDropdownData();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,12 +38,20 @@ function ScheduleAppointment({ onScheduled }) {
     }
 
     try {
+      const payload = {
+        patientName: patientName.trim(),
+        doctorName: doctorName.trim(),
+        date,
+        time
+      };
+
       const response = await axios.post(
         'http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments',
-        { patientName, doctorName, date, time }
+        payload
       );
+
       setMessage(response.data.message || 'Appointment created.');
-      onScheduled(); // refresh the appointment list
+      onScheduled(); // Refresh list
     } catch (error) {
       console.error(error);
       setMessage(
@@ -33,18 +62,20 @@ function ScheduleAppointment({ onScheduled }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Patient Name"
-        value={patientName}
-        onChange={(e) => setPatientName(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Doctor Name"
-        value={doctorName}
-        onChange={(e) => setDoctorName(e.target.value)}
-      />
+      <select value={patientName} onChange={(e) => setPatientName(e.target.value)}>
+        <option value="">Select Patient</option>
+        {patients.map((p) => (
+          <option key={p.id} value={p.name}>{p.name}</option>
+        ))}
+      </select>
+
+      <select value={doctorName} onChange={(e) => setDoctorName(e.target.value)}>
+        <option value="">Select Doctor</option>
+        {doctors.map((d) => (
+          <option key={d.id} value={d.name}>{d.name}</option>
+        ))}
+      </select>
+
       <input
         type="date"
         value={date}
