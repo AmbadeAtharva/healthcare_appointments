@@ -35,6 +35,7 @@ export default function AppointmentList({ refreshFlag }) {
             <strong>Patient:</strong> {appointment.patient}<br />
             <strong>Doctor:</strong> {appointment.doctor}<br />
             <strong>Date:</strong> {appointment.date} {appointment.time}<br />
+            <strong>Location:</strong> {appointment.location || 'N/A'}<br />
             <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', color: 'red' }}>Delete</button>
           </div>
         ))

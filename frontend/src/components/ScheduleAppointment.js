@@ -42,8 +42,10 @@ function ScheduleAppointment({ onScheduled }) {
         patientName: patientName.trim(),
         doctorName: doctorName.trim(),
         date,
-        time
+        time,
+        location: location.trim()
       };
+      
 
       const response = await axios.post(
         'http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments',
@@ -88,6 +90,13 @@ function ScheduleAppointment({ onScheduled }) {
       />
       <button type="submit">Schedule</button>
       {message && <p>{message}</p>}
+
+      <input
+  type="text"
+  placeholder="Location"
+  value={location}
+  onChange={(e) => setLocation(e.target.value)}
+/>
     </form>
   );
 }

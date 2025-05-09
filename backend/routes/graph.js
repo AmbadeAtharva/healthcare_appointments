@@ -4,6 +4,8 @@ const gremlin = require('gremlin');
 
 const { DriverRemoteConnection } = gremlin.driver;
 const { Graph } = gremlin.structure;
+const { patientName, doctorName, date, time, location } = req.body;
+
 
 const NEPTUNE_ENDPOINT = 'wss://db-neptune-1-instance-1.cqt62osoynt7.us-east-1.neptune.amazonaws.com:8182/gremlin';
 
@@ -192,12 +194,13 @@ if (patientList.length === 0 || doctorList.length === 0) {
     const doctor = doctorList[0];
 
     // Create the appointment edge
-    const result = await g.V(patient.id)
-      .addE('hasAppointment')
-      .to(__.V(doctor.id))
-      .property('date', date)
-      .property('time', time)
-      .next();
+    const result = await g.V(patientList[0].id)
+    .addE('hasAppointment')
+    .to(__.V(doctorList[0].id))
+    .property('date', date)
+    .property('time', time)
+    .property('location', location || '')
+    .next();
 
     console.log('Appointment Edge Creation Result:', result);
 
