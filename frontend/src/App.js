@@ -44,7 +44,7 @@ function App() {
     <div className="p-4">
       <h1 className="text-xl font-bold">Healthcare Scheduler</h1>
       <ScheduleAppointment onScheduled={handleScheduled} />
-      <AppointmentList refreshFlag={refreshFlag} /> {/* << Corrected here */}
+      <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} /> {/* << Corrected here */}
       <ToastContainer position="top-center" />
     </div>
   );

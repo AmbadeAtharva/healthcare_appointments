@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export default function AppointmentList({ refreshFlag }) {
+export default function AppointmentList({ refreshFlag, onRefresh }) {
   const [appointments, setAppointments] = useState([]);
   const [patientFilter, setPatientFilter] = useState('');
   const [doctorFilter, setDoctorFilter] = useState('');
