@@ -26,18 +26,25 @@
 // http://ec2-54-84-168-70.compute-1.amazonaws.com:3000
 
 import './App.css';
-import React from 'react';
+import React, { useState } from 'react';
 import ScheduleAppointment from './components/ScheduleAppointment';
 import AppointmentList from './components/AppointmentList';
 
 function App() {
+  const [refreshFlag, setRefreshFlag] = useState(0);
+
+  const handleScheduled = () => {
+    setRefreshFlag((prev) => prev + 1);
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold">Healthcare Scheduler</h1>
-      <ScheduleAppointment />
-      <AppointmentList />
+      <ScheduleAppointment onScheduled={handleScheduled} />
+      <AppointmentList key={refreshFlag} />
     </div>
   );
 }
 
 export default App;
+
