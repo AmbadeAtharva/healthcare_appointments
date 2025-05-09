@@ -168,11 +168,12 @@ router.post('/appointments', async (req, res) => {
     
         // Lookup patients and doctors by lowercase matching
         const patientList = await g.V().hasLabel('patient')
-          .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedPatient))
+          .filter(__.values('name').map(n => n ? n.toLowerCase() : '').is(normalizedPatient))
           .toList();
+
     
         const doctorList = await g.V().hasLabel('doctor')
-          .filter(__.values('name').map(n => n.toLowerCase()).is(normalizedDoctor))
+          .filter(__.values('name').map(n => n ? n.toLowerCase() : '').is(normalizedDoctor))
           .toList();
     
         // Debugging Output
