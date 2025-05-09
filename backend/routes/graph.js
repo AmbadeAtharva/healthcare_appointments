@@ -188,8 +188,6 @@ if (patientList.length === 0 || doctorList.length === 0) {
   });
 }
 
-    
-
     const patient = patientList[0];
     const doctor = doctorList[0];
 
@@ -200,6 +198,8 @@ if (patientList.length === 0 || doctorList.length === 0) {
       .property('date', date)
       .property('time', time)
       .next();
+
+    console.log('Appointment Edge Creation Result:', result);
 
     res.status(201).json({ message: 'Appointment created successfully.', edge: result.value });
   } catch (err) {
