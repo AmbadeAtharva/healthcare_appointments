@@ -262,3 +262,21 @@ router.get('/reset-all', async (req, res) => {
     res.status(500).send('Failed to reset graph.');
   }
 });
+
+// DELETE /api/graph/appointments/:appointmentId
+router.delete('/appointments/:appointmentId', async (req, res) => {
+  const { appointmentId } = req.params;
+
+  if (!appointmentId) {
+    return res.status(400).json({ error: 'Appointment ID is required' });
+  }
+
+  try {
+    const g = getTraversal();
+    await g.E(appointmentId).drop().iterate();
+    res.status(200).json({ message: `Appointment ${appointmentId} deleted successfully.` });
+  } catch (err) {
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Failed to delete appointment.', details: err.message });
+  }
+});
