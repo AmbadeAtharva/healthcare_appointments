@@ -19,14 +19,14 @@ export default function AppointmentList() {
   return (
     <div className="appointment-list">
   <h2>Scheduled Appointments</h2>
-  {appointments.map((appt) => (
-    <div className="appointment-item" key={appt.id}>
-      <strong>Patient:</strong> {appt.patientId}<br />
-      <strong>Doctor:</strong> {appt.doctorId}<br />
-      <strong>Date:</strong> {new Date(appt.date).toLocaleString()}<br />
-      <strong>Location:</strong> {appt.location}
-    </div>
-  ))}
+  {Array.isArray(appointments) && appointments.map((appointment, index)  => (
+  <div className="appointment-item" key={appointment.appointmentId}>
+    <strong>Patient:</strong> {appointment.patient}<br />
+    <strong>Doctor:</strong> {appointment.doctor}<br />
+    <strong>Date:</strong> {new Date(appointment.date).toLocaleString()}<br />
+    <strong>Location:</strong> {appointment.location}
+  </div>
+))}
 </div>
 
   );
