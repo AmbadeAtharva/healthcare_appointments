@@ -7,7 +7,7 @@ function ScheduleAppointment({ onScheduled }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [message, setMessage] = useState('');
-
+  const [appointmentLocation, setAppointmentLocation] = useState('');
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
 
@@ -43,7 +43,7 @@ function ScheduleAppointment({ onScheduled }) {
         doctorName: doctorName.trim(),
         date,
         time,
-        location: location.trim()
+        location: appointmentLocation.trim()
       };
       
 
@@ -92,11 +92,11 @@ function ScheduleAppointment({ onScheduled }) {
       {message && <p>{message}</p>}
 
       <input
-  type="text"
-  placeholder="Location"
-  value={location}
-  onChange={(e) => setLocation(e.target.value)}
-/>
+        type="text"
+        placeholder="Location"
+        value={appointmentLocation}
+        onChange={(e) => setAppointmentLocation(e.target.value)}
+      />
     </form>
   );
 }

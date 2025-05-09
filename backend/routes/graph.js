@@ -129,14 +129,15 @@ router.get('/appointments', async (req, res) => {
     const g = getTraversal();
 
     const results = await g.E()
-      .hasLabel('hasAppointment')
-      .project('appointmentId', 'date', 'time', 'patient', 'doctor')
-      .by(__.id())
-      .by(__.values('date'))
-      .by(__.values('time'))
-      .by(__.outV().values('name'))
-      .by(__.inV().values('name'))
-      .toList();
+    .hasLabel('hasAppointment')
+    .project('appointmentId', 'date', 'time', 'location', 'patient', 'doctor')  // Add 'location'
+    .by(__.id())
+    .by(__.values('date'))
+    .by(__.values('time'))
+    .by(__.values('location'))  // Add this line
+    .by(__.outV().values('name'))
+    .by(__.inV().values('name'))
+    .toList();
 
     if (!results.length) {
       return res.json({ message: 'No appointments found', data: [] });
