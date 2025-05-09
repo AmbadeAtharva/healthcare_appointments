@@ -66,7 +66,7 @@ export default function AppointmentList({ refreshFlag }) {
           <div className="appointment-item" key={appointment.appointmentId} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
             <strong>Patient:</strong> {appointment.patient}<br />
             <strong>Doctor:</strong> {appointment.doctor}<br />
-            <strong>Date:</strong> {new Date(appointment.date).toLocaleString()}<br />
+            <strong>Date:</strong> {new Date(appointment.date)}<br />
             <strong>Time:</strong> {appointment.time || 'Not specified'}<br />
             <strong>Location:</strong> {appointment.location || 'Not specified'}<br />
             <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', backgroundColor: 'red', color: 'white' }}>
