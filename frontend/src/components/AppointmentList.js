@@ -72,11 +72,19 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
         <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
       </div>
 
-      <h3>Upcoming Appointments ({upcomingAppointments.length})</h3>
-      {upcomingAppointments.length > 0 ? renderAppointments(upcomingAppointments) : <p>No upcoming appointments.</p>}
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+        {/* Upcoming Appointments Column */}
+        <div style={{ flex: 1, borderRight: '1px solid #ccc', paddingRight: '10px' }}>
+          <h3>Upcoming Appointments ({upcomingAppointments.length})</h3>
+          {upcomingAppointments.length > 0 ? renderAppointments(upcomingAppointments) : <p>No upcoming appointments.</p>}
+        </div>
 
-      <h3>Past Appointments ({pastAppointments.length})</h3>
-      {pastAppointments.length > 0 ? renderAppointments(pastAppointments) : <p>No past appointments.</p>}
+        {/* Past Appointments Column */}
+        <div style={{ flex: 1, paddingLeft: '10px' }}>
+          <h3>Past Appointments ({pastAppointments.length})</h3>
+          {pastAppointments.length > 0 ? renderAppointments(pastAppointments) : <p>No past appointments.</p>}
+        </div>
+      </div>
     </div>
   );
 }
