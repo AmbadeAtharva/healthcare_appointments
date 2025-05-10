@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
 
 function ScheduleAppointment({ onScheduled }) {
   const [patientName, setPatientName] = useState('');
   const [doctorName, setDoctorName] = useState('');
+  const [service, setService] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [message, setMessage] = useState('');
-  const [appointmentLocation, setAppointmentLocation] = useState('');
+
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
 
-  // Fetch dropdown options
   useEffect(() => {
     async function fetchDropdownData() {
       try {
@@ -26,38 +25,27 @@ function ScheduleAppointment({ onScheduled }) {
         console.error('Failed to load dropdown options:', err);
       }
     }
-
     fetchDropdownData();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!patientName || !doctorName || !date || !time) {
-      toast.success('Please fill out all fields.');
+    if (!patientName || !doctorName || !service || !date || !time) {
+      setMessage('Please fill out all fields.');
       return;
     }
 
+    const payload = { patientName, doctorName, service, date, time };
     try {
-      const payload = {
-        patientName: patientName.trim(),
-        doctorName: doctorName.trim(),
-        date,
-        time,
-        location: appointmentLocation.trim()
-      };
-      
-
       const response = await axios.post(
         'http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments',
         payload
       );
-
-      toast.success('Appointment created successfully.');;
-      onScheduled(); // Refresh list
+      setMessage(response.data.message || 'Appointment created.');
+      onScheduled();
     } catch (error) {
       console.error(error);
-      toast.error('Failed to schedule appointment.');
+      setMessage(error.response?.data?.error || 'Failed to schedule appointment.');
     }
   };
 
@@ -78,6 +66,12 @@ function ScheduleAppointment({ onScheduled }) {
       </select>
 
       <input
+        type="text"
+        placeholder="Service Type (e.g., Cardiology)"
+        value={service}
+        onChange={(e) => setService(e.target.value)}
+      />
+      <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
@@ -89,13 +83,6 @@ function ScheduleAppointment({ onScheduled }) {
       />
       <button type="submit">Schedule</button>
       {message && <p>{message}</p>}
-
-      <input
-        type="text"
-        placeholder="Location"
-        value={appointmentLocation}
-        onChange={(e) => setAppointmentLocation(e.target.value)}
-      />
     </form>
   );
 }

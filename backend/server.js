@@ -2,16 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 require('dotenv').config();
-//VS
+const PORT = 5001;
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/patients', require('../backend/routes/patients'));
-app.use('/api/doctors', require('../backend/routes/doctors'));
-app.use('/api/appointments', require('./routes/appointments'));
+// Routes
 app.use('/api/graph', require('./routes/graph'));
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start Server
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import './AppointmentList.css';  // Import your CSS
 
 export default function AppointmentList({ refreshFlag, onRefresh }) {
   const [appointments, setAppointments] = useState([]);
@@ -45,41 +44,25 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
   });
 
   return (
-    <div className="appointment-list-container">
+    <div className="appointment-list">
       <h2>Scheduled Appointments ({filteredAppointments.length})</h2>
 
-      <div className="filter-bar">
-        <input
-          type="text"
-          placeholder="Filter by Patient Name"
-          value={patientFilter}
-          onChange={(e) => setPatientFilter(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by Doctor Name"
-          value={doctorFilter}
-          onChange={(e) => setDoctorFilter(e.target.value)}
-        />
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-        />
+      <div style={{ marginBottom: '10px' }}>
+        <input type="text" placeholder="Filter by Patient Name" value={patientFilter} onChange={(e) => setPatientFilter(e.target.value)} />
+        <input type="text" placeholder="Filter by Doctor Name" value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} />
+        <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
       </div>
 
       {filteredAppointments.length > 0 ? (
         filteredAppointments.map((appointment) => (
-          <div className="appointment-card" key={appointment.appointmentId}>
-            <span><strong>Patient:</strong> {appointment.patient}</span>
-            <span><strong>Doctor:</strong> {appointment.doctor}</span>
-            <span><strong>Date:</strong> {appointment.date}</span>
-            <span><strong>Time:</strong> {appointment.time || 'Not specified'}</span>
-            <span><strong>Location:</strong> {appointment.location || 'Not specified'}</span>
-            <button
-              className="delete-button"
-              onClick={() => handleDelete(appointment.appointmentId)}
-            >
+          <div key={appointment.appointmentId} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
+            <strong>Patient:</strong> {appointment.patient}<br />
+            <strong>Doctor:</strong> {appointment.doctor}<br />
+            <strong>Service Required:</strong> {appointment.serviceRequired || 'Not specified'}<br />
+            <strong>Date:</strong> {appointment.date}<br />
+            <strong>Time:</strong> {appointment.time || 'Not specified'}<br />
+            <strong>Location:</strong> {appointment.location || 'Not specified'}<br />
+            <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', backgroundColor: 'red', color: 'white' }}>
               Delete
             </button>
           </div>
