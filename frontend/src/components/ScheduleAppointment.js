@@ -11,33 +11,35 @@ export default function ScheduleAppointment({ onScheduled }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
-  const [fallbackMessage, setFallbackMessage] = useState('');
-
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
 
-  useEffect(() => {
-    async function fetchDropdownData() {
-      try {
-        const [pRes, dRes] = await Promise.all([
-          axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/patients'),
-          axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/doctors'),
-        ]);
-        setPatients(pRes.data);
-        setDoctors(dRes.data);
-      } catch (err) {
-        console.error('Failed to load dropdown options:', err);
-        toast.error('Failed to load patient or doctor list.');
-      }
-    }
+  // New Patient Form State
+  const [showNewPatientForm, setShowNewPatientForm] = useState(false);
+  const [newPatientName, setNewPatientName] = useState('');
+  const [newPatientAge, setNewPatientAge] = useState('');
+  const [newPatientMessage, setNewPatientMessage] = useState('');
 
+  useEffect(() => {
     fetchDropdownData();
   }, []);
 
+  const fetchDropdownData = async () => {
+    try {
+      const [pRes, dRes] = await Promise.all([
+        axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/patients'),
+        axios.get('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/doctors'),
+      ]);
+      setPatients(pRes.data);
+      setDoctors(dRes.data);
+    } catch (err) {
+      console.error('Failed to load dropdown options:', err);
+      toast.error('Failed to load patient or doctor list.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFallbackMessage('');  // Clear previous fallback message
-
     if (!patientName || !doctorName || !serviceNeeded || !date || !time) {
       toast.error('All fields except location are required.');
       return;
@@ -50,17 +52,29 @@ export default function ScheduleAppointment({ onScheduled }) {
       onScheduled();
     } catch (error) {
       console.error(error);
-      const errorMessage = error.response?.data?.error || 'Failed to schedule appointment.';
-      const alternativeDoctors = error.response?.data?.alternatives;
+      toast.error(error.response?.data?.error || 'Failed to schedule appointment.');
+    }
+  };
 
-      if (alternativeDoctors && alternativeDoctors.length > 0) {
-        const suggestion = `Suggested alternative doctors: ${alternativeDoctors.join(', ')}`;
-        toast.error(errorMessage);
-        setFallbackMessage(suggestion);  // Show inline
-      } else {
-        toast.error(errorMessage);
-        setFallbackMessage(errorMessage);  // Show inline
-      }
+  const handleNewPatientSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPatientName.trim()) {
+      setNewPatientMessage('Patient name is required.');
+      return;
+    }
+
+    try {
+      await axios.post('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/patients', {
+        name: newPatientName.trim(),
+        age: newPatientAge.trim(),
+      });
+      setNewPatientMessage('New patient added successfully.');
+      setNewPatientName('');
+      setNewPatientAge('');
+      fetchDropdownData();
+    } catch (error) {
+      console.error(error);
+      setNewPatientMessage('Failed to add new patient.');
     }
   };
 
@@ -88,10 +102,20 @@ export default function ScheduleAppointment({ onScheduled }) {
         <input className="form-control" type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ maxWidth: '140px' }} />
         <input className="form-control" type="text" placeholder="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} style={{ maxWidth: '200px' }} />
         <button type="submit" className="btn btn-primary">Schedule</button>
+        <button type="button" className="btn btn-secondary" onClick={() => setShowNewPatientForm(!showNewPatientForm)}>
+          {showNewPatientForm ? 'Cancel' : 'Add New Patient'}
+        </button>
       </form>
 
-      {fallbackMessage && <div className="alert alert-warning mt-2 text-center">{fallbackMessage}</div>}
-      
+      {showNewPatientForm && (
+        <form onSubmit={handleNewPatientSubmit} className="d-flex flex-wrap gap-2 justify-content-center align-items-center mt-3">
+          <input className="form-control" type="text" placeholder="Patient Name" value={newPatientName} onChange={(e) => setNewPatientName(e.target.value)} style={{ maxWidth: '150px' }} />
+          <input className="form-control" type="number" placeholder="Age (optional)" value={newPatientAge} onChange={(e) => setNewPatientAge(e.target.value)} style={{ maxWidth: '150px' }} />
+          <button type="submit" className="btn btn-success">Submit New Patient</button>
+          {newPatientMessage && <p className="mt-2">{newPatientMessage}</p>}
+        </form>
+      )}
+
       <ToastContainer position="top-center" />
     </div>
   );
