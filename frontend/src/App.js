@@ -4,35 +4,23 @@ import ScheduleAppointment from './components/ScheduleAppointment';
 import AppointmentList from './components/AppointmentList';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [refreshFlag, setRefreshFlag] = useState(0);
-  const [statusMessage, setStatusMessage] = useState('');
 
-  const handleScheduled = (message = '') => {
-    setRefreshFlag((prev) => prev + 1);
-    setStatusMessage(message);
+  const handleScheduled = () => {
+    setRefreshFlag((prev) => prev + 1);  // Triggers re-fetch in AppointmentList
   };
 
   return (
-    <div className="container py-5 text-center">
-      {statusMessage && (
-        <div className="alert alert-info" role="alert">
-          {statusMessage}
-        </div>
-      )}
-
-      <h1 className="mb-4">Healthcare Scheduler</h1>
-
-      <div className="card p-4 mb-4 shadow-sm">
+    <div className="container">
+      <h1>Healthcare Scheduler</h1>
+      <div className="schedule-form">
         <ScheduleAppointment onScheduled={handleScheduled} />
       </div>
-
-      <div className="card p-4 shadow-sm">
+      <div className="appointment-list-section">
         <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} />
       </div>
-
       <ToastContainer position="top-center" />
     </div>
   );
