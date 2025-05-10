@@ -135,34 +135,17 @@ router.get('/doctors', async (req, res) => {
 // Get all appointments
 router.get('/appointments', async (req, res) => {
   try {
-// Conflict detection
-const isConflict = await g.V(doctorList[0].id)
-  .inE('hasAppointment')
-  .has('date', date)
-  .has('time', time)
-  .toList();
-
-if (isConflict.length > 0) {
-  // Find alternative doctors with the same specialty but exclude the conflicting doctor
-  const fallbackDoctors = allDoctors.filter(d => 
-    d.specialty && 
-    d.specialty[0].toLowerCase() === serviceNeeded.trim().toLowerCase() &&
-    d.name[0].toLowerCase() !== normalizedDoctor
-  );
-
-  if (fallbackDoctors.length > 0) {
-    const fallbackNames = fallbackDoctors.map(d => d.name[0]);
-    return res.status(409).json({
-      error: `Doctor '${doctorName}' is already booked at this time. Suggested alternative doctors for '${serviceNeeded}':`,
-      alternatives: fallbackNames
-    });
-  } else {
-    return res.status(409).json({
-      error: `Doctor '${doctorName}' is already booked at this time, and no alternative doctors found for '${serviceNeeded}'.`
-    });
-  }
-}
-
+    const g = getTraversal();
+    const results = await g.E().hasLabel('hasAppointment')
+      .project('appointmentId', 'date', 'time', 'location', 'patient', 'doctor')
+      .by(__.id())
+      .by(__.values('date'))
+      .by(__.values('time'))
+      .by(__.values('location'))
+      .by(__.outV().values('name'))
+      .by(__.inV().values('name'))
+      .toList();
+    res.json({ message: 'Appointments fetched successfully', data: results.length ? results : [] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch appointments', details: err.message });
   }
