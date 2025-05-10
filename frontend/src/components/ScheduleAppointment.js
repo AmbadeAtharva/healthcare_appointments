@@ -13,6 +13,7 @@ export default function ScheduleAppointment({ onScheduled }) {
   const [location, setLocation] = useState('');
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [fallbackMessage, setFallbackMessage] = useState('');
 
   // New Patient Form State
   const [showNewPatientForm, setShowNewPatientForm] = useState(false);
@@ -40,6 +41,8 @@ export default function ScheduleAppointment({ onScheduled }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFallbackMessage('');  // Clear previous fallback message
+
     if (!patientName || !doctorName || !serviceNeeded || !date || !time) {
       toast.error('All fields except location are required.');
       return;
@@ -52,7 +55,17 @@ export default function ScheduleAppointment({ onScheduled }) {
       onScheduled();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.error || 'Failed to schedule appointment.');
+      const errorMessage = error.response?.data?.error || 'Failed to schedule appointment.';
+      const alternativeDoctors = error.response?.data?.alternatives;
+
+      if (alternativeDoctors && alternativeDoctors.length > 0) {
+        const suggestion = `Suggested alternative doctors: ${alternativeDoctors.join(', ')}`;
+        toast.error(errorMessage + ' ' + suggestion);
+        setFallbackMessage(suggestion);  // Show inline
+      } else {
+        toast.error(errorMessage);
+        setFallbackMessage(errorMessage);  // Show inline
+      }
     }
   };
 
@@ -106,7 +119,7 @@ export default function ScheduleAppointment({ onScheduled }) {
           {showNewPatientForm ? 'Cancel' : 'Add New Patient'}
         </button>
       </form>
-
+          
       {showNewPatientForm && (
         <form onSubmit={handleNewPatientSubmit} className="d-flex flex-wrap gap-2 justify-content-center align-items-center mt-3">
           <input className="form-control" type="text" placeholder="Patient Name" value={newPatientName} onChange={(e) => setNewPatientName(e.target.value)} style={{ maxWidth: '150px' }} />
@@ -115,7 +128,7 @@ export default function ScheduleAppointment({ onScheduled }) {
           {newPatientMessage && <p className="mt-2">{newPatientMessage}</p>}
         </form>
       )}
-
+      {fallbackMessage && <div className="alert alert-warning mt-2 text-center">{fallbackMessage}</div>}
       <ToastContainer position="top-center" />
     </div>
   );
