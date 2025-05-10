@@ -2,7 +2,6 @@ import './App.css';
 import React, { useState } from 'react';
 import ScheduleAppointment from './components/ScheduleAppointment';
 import AppointmentList from './components/AppointmentList';
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
@@ -21,7 +20,6 @@ function App() {
       <div className="appointment-list-section">
         <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} />
       </div>
-      <ToastContainer position="top-center" />
     </div>
   );
 }
