@@ -137,19 +137,22 @@ router.get('/appointments', async (req, res) => {
   try {
     const g = getTraversal();
     const results = await g.E().hasLabel('hasAppointment')
-      .project('appointmentId', 'date', 'time', 'location', 'patient', 'doctor')
+      .project('appointmentId', 'date', 'time', 'location', 'serviceRequired', 'patient', 'doctor')
       .by(__.id())
       .by(__.values('date'))
       .by(__.values('time'))
       .by(__.values('location'))
+      .by(__.values('serviceRequired'))  // Ensure serviceRequired is projected here
       .by(__.outV().values('name'))
       .by(__.inV().values('name'))
       .toList();
+
     res.json({ message: 'Appointments fetched successfully', data: results.length ? results : [] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch appointments', details: err.message });
   }
 });
+
 
 /** ---------------------- POST Queries ---------------------- **/
 
