@@ -11,6 +11,7 @@ export default function ScheduleAppointment({ onScheduled }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
+  const [fallbackMessage, setFallbackMessage] = useState('');
 
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -35,6 +36,8 @@ export default function ScheduleAppointment({ onScheduled }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFallbackMessage('');
+
     if (!patientName || !doctorName || !serviceNeeded || !date || !time) {
       toast.error('All fields except location are required.');
       return;
@@ -44,15 +47,28 @@ export default function ScheduleAppointment({ onScheduled }) {
       const payload = { patientName, doctorName, serviceNeeded, date, time, location };
       const response = await axios.post('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments', payload);
       toast.success(response.data.message || 'Appointment created.');
+      setPatientName('');
+      setDoctorName('');
+      setServiceNeeded('');
+      setDate('');
+      setTime('');
+      setLocation('');
+      setFallbackMessage('');
       onScheduled();
     } catch (error) {
       console.error(error);
-      setMessage(error.response?.data?.error || 'Failed to schedule appointment.');
+      const fallbackMsg = error.response?.data?.message;
+      const alternatives = error.response?.data?.alternatives;
+      if (fallbackMsg && alternatives) {
+        setFallbackMessage(`${fallbackMsg} ${alternatives.join(', ')}`);
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to schedule appointment.');
+      }
     }
   };
 
   return (
-    <div className="container my-4 d-flex justify-content-center">
+    <div className="container my-4 d-flex flex-column align-items-center">
       <form onSubmit={handleSubmit} className="d-flex flex-wrap gap-2 justify-content-center align-items-center">
         <select className="form-select" value={patientName} onChange={(e) => setPatientName(e.target.value)} style={{ maxWidth: '150px' }}>
           <option value="">Select Patient</option>
@@ -75,8 +91,9 @@ export default function ScheduleAppointment({ onScheduled }) {
         <input className="form-control" type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ maxWidth: '140px' }} />
         <input className="form-control" type="text" placeholder="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} style={{ maxWidth: '200px' }} />
         <button type="submit" className="btn btn-primary">Schedule</button>
-        {message && <div className="alert alert-info mt-2">{message}</div>}
       </form>
+
+      {fallbackMessage && <div className="alert alert-warning mt-3">{fallbackMessage}</div>}
       <ToastContainer position="top-center" />
     </div>
   );
