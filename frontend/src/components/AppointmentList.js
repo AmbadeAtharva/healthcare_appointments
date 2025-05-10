@@ -22,9 +22,7 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
   };
 
   const handleDelete = async (appointmentId) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this appointment?');
-    if (!confirmDelete) return;
-
+    if (!window.confirm('Are you sure you want to delete this appointment?')) return;
     try {
       await axios.delete(`http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments/${appointmentId}`);
       setAppointments(prev => prev.filter(a => a.appointmentId !== appointmentId));
@@ -54,19 +52,45 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
       </div>
 
       {filteredAppointments.length > 0 ? (
-        filteredAppointments.map((appointment) => (
-          <div key={appointment.appointmentId} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
-            <strong>Patient:</strong> {appointment.patient}<br />
-            <strong>Doctor:</strong> {appointment.doctor}<br />
-            <strong>Service Required:</strong> {appointment.serviceRequired || 'Not specified'}<br />
-            <strong>Date:</strong> {appointment.date}<br />
-            <strong>Time:</strong> {appointment.time || 'Not specified'}<br />
-            <strong>Location:</strong> {appointment.location || 'Not specified'}<br />
-            <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', backgroundColor: 'red', color: 'white' }}>
-              Delete
-            </button>
-          </div>
-        ))
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #ddd' }}>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Service</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Location</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAppointments.map((appointment) => (
+              <tr key={appointment.appointmentId} style={{ borderBottom: '1px solid #eee' }}>
+                <td>{appointment.patient}</td>
+                <td>{appointment.doctor}</td>
+                <td>{appointment.serviceRequired || 'Not specified'}</td>
+                <td>{appointment.date}</td>
+                <td>{appointment.time || 'Not specified'}</td>
+                <td>{appointment.location || 'Not specified'}</td>
+                <td>
+                  <button
+                    style={{
+                      backgroundColor: 'red',
+                      color: 'white',
+                      border: 'none',
+                      padding: '5px 10px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleDelete(appointment.appointmentId)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
         <p>No appointments match the filter.</p>
       )}
