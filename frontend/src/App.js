@@ -1,55 +1,41 @@
-// import logo from './logo.svg';
-// import './App.css';
-// // comment
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
-
-// export default App;
-// http://ec2-54-84-168-70.compute-1.amazonaws.com:3000
-
 import './App.css';
 import React, { useState } from 'react';
 import ScheduleAppointment from './components/ScheduleAppointment';
 import AppointmentList from './components/AppointmentList';
-
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [refreshFlag, setRefreshFlag] = useState(0);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const handleScheduled = () => {
-    setRefreshFlag((prev) => prev + 1);  // Triggers re-fetch in AppointmentList
+  const handleScheduled = (message = '') => {
+    setRefreshFlag((prev) => prev + 1);
+    setStatusMessage(message);
   };
 
   return (
-    <div className="centered-layout">
-      <h1 style={{ textAlign: 'center' }}>Healthcare Scheduler</h1>
-      <ScheduleAppointment onScheduled={handleScheduled} />
-      <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} />
+    <div className="container py-5 text-center">
+      {statusMessage && (
+        <div className="alert alert-info" role="alert">
+          {statusMessage}
+        </div>
+      )}
+
+      <h1 className="mb-4">Healthcare Scheduler</h1>
+
+      <div className="card p-4 mb-4 shadow-sm">
+        <ScheduleAppointment onScheduled={handleScheduled} />
+      </div>
+
+      <div className="card p-4 shadow-sm">
+        <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} />
+      </div>
+
       <ToastContainer position="top-center" />
     </div>
-  );  
+  );
 }
 
 export default App;
-
-
