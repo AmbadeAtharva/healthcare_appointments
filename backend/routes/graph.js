@@ -252,7 +252,7 @@ router.post('/patients', async (req, res) => {
   try {
     const g = getTraversal();
     const result = await g.addV('patient')
-      .property('name', name.trim().toLowerCase())
+      .property('name', name.trim())
       .property('age', age || '')
       .next();
 
