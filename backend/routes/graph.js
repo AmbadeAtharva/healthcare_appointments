@@ -229,7 +229,7 @@ router.post('/appointments', async (req, res) => {
       .property('date', date)
       .property('time', time)
       .property('location', location || '')
-      .property('serviceNeeded', serviceNeeded)
+      .property('serviceRequired', serviceNeeded)
       .next();
 
     console.log('Appointment Edge Creation Result:', result);
