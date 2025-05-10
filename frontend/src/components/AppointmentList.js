@@ -25,7 +25,6 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
   const handleDelete = async (appointmentId) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this appointment?');
     if (!confirmDelete) return;
-
     try {
       await axios.delete(`http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments/${appointmentId}`);
       setAppointments(prev => prev.filter(a => a.appointmentId !== appointmentId));
@@ -44,46 +43,40 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
     return matchPatient && matchDoctor && matchDate;
   });
 
+  const now = new Date();
+  const upcomingAppointments = filteredAppointments.filter(a => new Date(a.date) >= now);
+  const pastAppointments = filteredAppointments.filter(a => new Date(a.date) < now);
+
+  const renderAppointments = (list) => (
+    list.map(a => (
+      <div key={a.appointmentId} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
+        <strong>Patient:</strong> {a.patient}<br />
+        <strong>Doctor:</strong> {a.doctor}<br />
+        <strong>Date:</strong> {a.date}<br />
+        <strong>Time:</strong> {a.time || 'Not specified'}<br />
+        <strong>Location:</strong> {a.location || 'Not specified'}<br />
+        <button onClick={() => handleDelete(a.appointmentId)} style={{ marginTop: '5px', backgroundColor: 'red', color: 'white' }}>
+          Delete
+        </button>
+      </div>
+    ))
+  );
+
   return (
     <div className="appointment-list">
       <h2>Scheduled Appointments ({filteredAppointments.length})</h2>
 
       <div style={{ marginBottom: '10px' }}>
-        <input
-          type="text"
-          placeholder="Filter by Patient Name"
-          value={patientFilter}
-          onChange={(e) => setPatientFilter(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by Doctor Name"
-          value={doctorFilter}
-          onChange={(e) => setDoctorFilter(e.target.value)}
-        />
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-        />
+        <input type="text" placeholder="Filter by Patient Name" value={patientFilter} onChange={(e) => setPatientFilter(e.target.value)} />
+        <input type="text" placeholder="Filter by Doctor Name" value={doctorFilter} onChange={(e) => setDoctorFilter(e.target.value)} />
+        <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
       </div>
 
-      {filteredAppointments.length > 0 ? (
-        filteredAppointments.map((appointment) => (
-          <div className="appointment-item" key={appointment.appointmentId} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
-            <strong>Patient:</strong> {appointment.patient}<br />
-            <strong>Doctor:</strong> {appointment.doctor}<br />
-            <strong>Date:</strong> {appointment.date}<br />
-            <strong>Time:</strong> {appointment.time || 'Not specified'}<br />
-            <strong>Location:</strong> {appointment.location || 'Not specified'}<br />
-            <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', backgroundColor: 'red', color: 'white' }}>
-              Delete
-            </button>
-          </div>
-        ))
-      ) : (
-        <p>No appointments match the filter.</p>
-      )}
+      <h3>Upcoming Appointments ({upcomingAppointments.length})</h3>
+      {upcomingAppointments.length > 0 ? renderAppointments(upcomingAppointments) : <p>No upcoming appointments.</p>}
+
+      <h3>Past Appointments ({pastAppointments.length})</h3>
+      {pastAppointments.length > 0 ? renderAppointments(pastAppointments) : <p>No past appointments.</p>}
     </div>
   );
 }
