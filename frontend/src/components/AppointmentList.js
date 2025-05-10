@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import './AppointmentList.css';  // Import your CSS
 
 export default function AppointmentList({ refreshFlag, onRefresh }) {
   const [appointments, setAppointments] = useState([]);
-  const [view, setView] = useState('upcoming'); // Toggle state
+  const [patientFilter, setPatientFilter] = useState('');
+  const [doctorFilter, setDoctorFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
     fetchAppointments();
@@ -20,7 +23,8 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
   };
 
   const handleDelete = async (appointmentId) => {
-    if (!window.confirm('Are you sure you want to delete this appointment?')) return;
+    const confirmDelete = window.confirm('Are you sure you want to delete this appointment?');
+    if (!confirmDelete) return;
 
     try {
       await axios.delete(`http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments/${appointmentId}`);
@@ -33,65 +37,55 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
     }
   };
 
-  const now = new Date();
-  const upcomingAppointments = appointments.filter(a => new Date(a.date) >= now);
-  const pastAppointments = appointments.filter(a => new Date(a.date) < now);
-
-  const renderAppointments = (list) =>
-    list.map((appointment) => (
-<table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-  <thead>
-    <tr>
-      <th>Patient Name</th>
-      <th>Doctor Name</th>
-      <th>Date</th>
-      <th>Time</th>
-      <th>Location</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {filteredAppointments.map(appointment => (
-      <tr key={appointment.appointmentId}>
-        <td>{appointment.patient}</td>
-        <td>{appointment.doctor}</td>
-        <td>{appointment.date}</td>
-        <td>{appointment.time || 'Not specified'}</td>
-        <td>{appointment.location || 'Not specified'}</td>
-        <td>
-          <button onClick={() => handleDelete(appointment.appointmentId)}>
-            Delete
-          </button>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
-    ));
+  const filteredAppointments = appointments.filter(appointment => {
+    const matchPatient = patientFilter === '' || appointment.patient.toLowerCase().includes(patientFilter.toLowerCase());
+    const matchDoctor = doctorFilter === '' || appointment.doctor.toLowerCase().includes(doctorFilter.toLowerCase());
+    const matchDate = dateFilter === '' || appointment.date === dateFilter;
+    return matchPatient && matchDoctor && matchDate;
+  });
 
   return (
-    <div className="appointment-list">
-      <h2>Scheduled Appointments</h2>
-      <div style={{ marginBottom: '10px' }}>
-        <button onClick={() => setView('upcoming')} style={{ marginRight: '5px', backgroundColor: view === 'upcoming' ? 'blue' : 'gray', color: 'white' }}>
-          Upcoming Appointments
-        </button>
-        <button onClick={() => setView('past')} style={{ backgroundColor: view === 'past' ? 'blue' : 'gray', color: 'white' }}>
-          Past Appointments
-        </button>
+    <div className="appointment-list-container">
+      <h2>Scheduled Appointments ({filteredAppointments.length})</h2>
+
+      <div className="filter-bar">
+        <input
+          type="text"
+          placeholder="Filter by Patient Name"
+          value={patientFilter}
+          onChange={(e) => setPatientFilter(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by Doctor Name"
+          value={doctorFilter}
+          onChange={(e) => setDoctorFilter(e.target.value)}
+        />
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+        />
       </div>
 
-      {view === 'upcoming' ? (
-        <>
-          <h3>Upcoming Appointments ({upcomingAppointments.length})</h3>
-          {upcomingAppointments.length > 0 ? renderAppointments(upcomingAppointments) : <p>No upcoming appointments.</p>}
-        </>
+      {filteredAppointments.length > 0 ? (
+        filteredAppointments.map((appointment) => (
+          <div className="appointment-card" key={appointment.appointmentId}>
+            <span><strong>Patient:</strong> {appointment.patient}</span>
+            <span><strong>Doctor:</strong> {appointment.doctor}</span>
+            <span><strong>Date:</strong> {appointment.date}</span>
+            <span><strong>Time:</strong> {appointment.time || 'Not specified'}</span>
+            <span><strong>Location:</strong> {appointment.location || 'Not specified'}</span>
+            <button
+              className="delete-button"
+              onClick={() => handleDelete(appointment.appointmentId)}
+            >
+              Delete
+            </button>
+          </div>
+        ))
       ) : (
-        <>
-          <h3>Past Appointments ({pastAppointments.length})</h3>
-          {pastAppointments.length > 0 ? renderAppointments(pastAppointments) : <p>No past appointments.</p>}
-        </>
+        <p>No appointments match the filter.</p>
       )}
     </div>
   );
