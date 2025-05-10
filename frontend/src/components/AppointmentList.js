@@ -39,16 +39,35 @@ export default function AppointmentList({ refreshFlag, onRefresh }) {
 
   const renderAppointments = (list) =>
     list.map((appointment) => (
-      <div key={appointment.appointmentId} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '5px' }}>
-        <strong>Patient:</strong> {appointment.patient}<br />
-        <strong>Doctor:</strong> {appointment.doctor}<br />
-        <strong>Date:</strong> {appointment.date}<br />
-        <strong>Time:</strong> {appointment.time || 'Not specified'}<br />
-        <strong>Location:</strong> {appointment.location || 'Not specified'}<br />
-        <button onClick={() => handleDelete(appointment.appointmentId)} style={{ marginTop: '5px', backgroundColor: 'red', color: 'white' }}>
-          Delete
-        </button>
-      </div>
+<table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+  <thead>
+    <tr>
+      <th>Patient Name</th>
+      <th>Doctor Name</th>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Location</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filteredAppointments.map(appointment => (
+      <tr key={appointment.appointmentId}>
+        <td>{appointment.patient}</td>
+        <td>{appointment.doctor}</td>
+        <td>{appointment.date}</td>
+        <td>{appointment.time || 'Not specified'}</td>
+        <td>{appointment.location || 'Not specified'}</td>
+        <td>
+          <button onClick={() => handleDelete(appointment.appointmentId)}>
+            Delete
+          </button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
     ));
 
   return (
