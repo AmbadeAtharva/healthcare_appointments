@@ -202,17 +202,22 @@ router.post('/appointments', async (req, res) => {
     if (conflicts.length > 0) {
       // Fallback logic: find alternative doctors with matching service
       const alternativeDoctors = allDoctors.filter(d => {
-        const specialties = (Array.isArray(d.specialty) ? d.specialty : [d.specialty || '']).map(s => s.toLowerCase());
-        return specialties.some(s => s.includes(normalizedService)) && d.name[0].toLowerCase() !== normalizedDoctor;
+        const specialties = d.specialty 
+          ? (Array.isArray(d.specialty) ? d.specialty : [d.specialty]).map(s => s.toLowerCase())
+          : [];
+      
+        return specialties.some(s => s.includes(normalizedService)) && d.name && d.name[0].toLowerCase() !== normalizedDoctor;
       });
-
-      const fallbackNames = alternativeDoctors.map(d => d.name[0]);
+      
+      const fallbackNames = alternativeDoctors.map(d => d.name ? d.name[0] : 'Unnamed Doctor');
+      
+      console.log('Fallback doctor suggestions:', fallbackNames);
+      
       return res.status(409).json({
         error: `Doctor '${doctorName}' is already booked at this time. Suggested alternative doctors for '${serviceNeeded}':`,
-        alternatives: fallbackNames.length ? fallbackNames : []
+        alternatives: fallbackNames.length ? fallbackNames : ['No alternatives available']
       });
     }
-
     // No conflict, create appointment
     const result = await g.V(patientList[0].id)
       .addE('hasAppointment')
