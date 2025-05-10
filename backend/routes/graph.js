@@ -158,77 +158,72 @@ router.post('/appointments', async (req, res) => {
     const g = getTraversal();
     const { patientName, doctorName, serviceNeeded, date, time, location } = req.body;
 
+    // Validation
     if (!patientName || !doctorName || !serviceNeeded || !date || !time) {
-      return res.status(400).json({ error: 'All fields (patientName, doctorName, serviceNeeded, date, time) are required.' });
+      return res.status(400).json({
+        error: 'All fields (patientName, doctorName, serviceNeeded, date, time) are required.'
+      });
     }
 
     const __ = gremlin.process.statics;
 
+    // Fetch all patients and doctors
     const allPatients = await g.V().hasLabel('patient').valueMap(true).toList();
     const allDoctors = await g.V().hasLabel('doctor').valueMap(true).toList();
 
+    // Normalize names for matching
     const normalizedPatient = patientName.trim().toLowerCase();
     const normalizedDoctor = doctorName.trim().toLowerCase();
     const normalizedService = serviceNeeded.trim().toLowerCase();
 
+    // Find patient and doctor
     const patientList = allPatients.filter(p => p.name && p.name[0].toLowerCase() === normalizedPatient);
     const doctorList = allDoctors.filter(d => d.name && d.name[0].toLowerCase() === normalizedDoctor);
 
-    if (patientList.length === 0) {
-      return res.status(404).json({ error: `Patient '${patientName}' not found.` });
-    }
-
-    if (doctorList.length === 0) {
-      const fallbackDoctors = allDoctors.filter(d =>
-        d.specialty && d.specialty[0].toLowerCase().includes(normalizedService)
-      );
-
-      if (fallbackDoctors.length === 0) {
-        return res.status(404).json({ error: `Doctor '${doctorName}' not found, and no fallback doctor found for service '${serviceNeeded}'.` });
-      }
-
+    if (patientList.length === 0 || doctorList.length === 0) {
       return res.status(404).json({
-        error: `Doctor '${doctorName}' not found. Suggested doctors for '${serviceNeeded}':`,
-        suggestions: fallbackDoctors.map(d => d.name[0])
+        error: 'Patient or Doctor not found.',
+        details: {
+          patientFound: patientList.length > 0,
+          doctorFound: doctorList.length > 0
+        }
       });
     }
 
-    const patient = patientList[0];
-    const doctor = doctorList[0];
+    const doctorId = doctorList[0].id;
 
-    // Check if the doctor is already booked at this date and time
-    const existingAppointments = await g.V(doctor.id)
+    // Check for scheduling conflicts with this doctor at this date and time
+    const conflicts = await g.V(doctorId)
       .inE('hasAppointment')
       .has('date', date)
       .has('time', time)
       .toList();
 
-    if (existingAppointments.length > 0) {
-      // Find alternative doctors with matching specialty
-      const alternativeDoctors = allDoctors.filter(d =>
-        d.id !== doctor.id &&
-        d.specialty && d.specialty[0].toLowerCase().includes(normalizedService)
-      );
+    if (conflicts.length > 0) {
+      // Fallback logic: find alternative doctors with matching service
+      const alternativeDoctors = allDoctors.filter(d => {
+        const specialties = (Array.isArray(d.specialty) ? d.specialty : [d.specialty || '']).map(s => s.toLowerCase());
+        return specialties.some(s => s.includes(normalizedService)) && d.name[0].toLowerCase() !== normalizedDoctor;
+      });
 
-      if (alternativeDoctors.length === 0) {
-        return res.status(409).json({ error: `Doctor '${doctorName}' is already booked at this time, and no alternative doctors found for '${serviceNeeded}'.` });
-      }
-
+      const fallbackNames = alternativeDoctors.map(d => d.name[0]);
       return res.status(409).json({
         error: `Doctor '${doctorName}' is already booked at this time. Suggested alternative doctors for '${serviceNeeded}':`,
-        suggestions: alternativeDoctors.map(d => d.name[0])
+        alternatives: fallbackNames.length ? fallbackNames : []
       });
     }
 
-    // Create the appointment
-    const result = await g.V(patient.id)
+    // No conflict, create appointment
+    const result = await g.V(patientList[0].id)
       .addE('hasAppointment')
-      .to(__.V(doctor.id))
+      .to(__.V(doctorId))
       .property('date', date)
       .property('time', time)
       .property('location', location || '')
       .property('serviceNeeded', serviceNeeded)
       .next();
+
+    console.log('Appointment Edge Creation Result:', result);
 
     res.status(201).json({ message: 'Appointment created successfully.', edge: result.value });
   } catch (err) {
