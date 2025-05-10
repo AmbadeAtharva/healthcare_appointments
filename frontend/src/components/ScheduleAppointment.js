@@ -47,7 +47,7 @@ export default function ScheduleAppointment({ onScheduled }) {
       onScheduled();
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.error || 'Failed to schedule appointment.');
+      setMessage(error.response?.data?.error || 'Failed to schedule appointment.');
     }
   };
 
@@ -75,6 +75,7 @@ export default function ScheduleAppointment({ onScheduled }) {
         <input className="form-control" type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ maxWidth: '140px' }} />
         <input className="form-control" type="text" placeholder="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} style={{ maxWidth: '200px' }} />
         <button type="submit" className="btn btn-primary">Schedule</button>
+        {message && <div className="alert alert-info mt-2">{message}</div>}
       </form>
       <ToastContainer position="top-center" />
     </div>
