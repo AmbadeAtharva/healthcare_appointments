@@ -241,6 +241,28 @@ router.post('/appointments', async (req, res) => {
   }
 });
 
+// POST /api/graph/patients
+router.post('/patients', async (req, res) => {
+  const { name, age } = req.body;
+
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ error: 'Patient name is required.' });
+  }
+
+  try {
+    const g = getTraversal();
+    const result = await g.addV('patient')
+      .property('name', name.trim().toLowerCase())
+      .property('age', age || '')
+      .next();
+
+    res.status(201).json({ message: `Patient '${name}' added successfully.`, patient: result.value });
+  } catch (err) {
+    console.error('Error adding patient:', err);
+    res.status(500).json({ error: 'Failed to add patient.', details: err.message });
+  }
+});
+
 
 /** ---------------------- DROP / DELETE Queries ---------------------- **/
 
