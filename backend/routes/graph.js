@@ -32,12 +32,12 @@ router.get('/init-data', async (req, res) => {
 
     // --- Patients ---
     const alice = await g.addV('patient')
-      .property('name', 'alice')
+      .property('name', 'Alice')
       .property('age', 30)
       .next();
 
     const bob = await g.addV('patient')
-      .property('name', 'bob')
+      .property('name', 'Bob')
       .property('age', 45)
       .next();
 
@@ -45,21 +45,21 @@ router.get('/init-data', async (req, res) => {
 
     // --- Expanded Doctors ---
     const doctorSpecs = [
-      { name: 'dr. alice walker', specialty: 'Cardiology' },
-      { name: 'dr. bob carter', specialty: 'Dermatology' },
-      { name: 'dr. charlie green', specialty: 'Pediatrics' },
-      { name: 'dr. diana prince', specialty: 'Orthopedics' },
-      { name: 'dr. ethan hunt', specialty: 'Neurology' },
-      { name: 'dr. frank ocean', specialty: 'General Practice' },
-      { name: 'dr. grace lee', specialty: 'Ophthalmology' },
-      { name: 'dr. harry potter', specialty: 'Oncology' },
-      { name: 'dr. isabel king', specialty: 'Cardiology' },
-      { name: 'dr. john doe', specialty: 'Orthopedics' },
-      { name: 'dr. karen smith', specialty: 'Pediatrics' },
-      { name: 'dr. leo messi', specialty: 'Sports Medicine' },
-      { name: 'dr. mary jane', specialty: 'Gynecology' },
-      { name: 'dr. nick fury', specialty: 'General Practice' },
-      { name: 'dr. olivia brown', specialty: 'Neurology' }
+      { name: 'Dr. Alice Walker', specialty: 'Cardiology' },
+      { name: 'Dr. Bob Carter', specialty: 'Dermatology' },
+      { name: 'Dr. Charlie Green', specialty: 'Pediatrics' },
+      { name: 'Dr. Diana Prince', specialty: 'Orthopedics' },
+      { name: 'Dr. Ethan Hunt', specialty: 'Neurology' },
+      { name: 'Dr. Frank Ocean', specialty: 'General Practice' },
+      { name: 'Dr. Grace Lee', specialty: 'Ophthalmology' },
+      { name: 'Dr. Harry Potter', specialty: 'Oncology' },
+      { name: 'Dr. Isabel King', specialty: 'Cardiology' },
+      { name: 'Dr. John Doe', specialty: 'Orthopedics' },
+      { name: 'Dr. Karen Smith', specialty: 'Pediatrics' },
+      { name: 'Dr. Leo Messi', specialty: 'Sports Medicine' },
+      { name: 'Dr. Mary Jane', specialty: 'Gynecology' },
+      { name: 'Dr. Nick Fury', specialty: 'General Practice' },
+      { name: 'Dr. Olivia Brown', specialty: 'Neurology' }
     ];
 
     for (const doc of doctorSpecs) {
