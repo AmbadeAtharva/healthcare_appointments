@@ -218,7 +218,7 @@ router.post('/appointments', async (req, res) => {
       console.log('Fallback doctor suggestions:', fallbackNames);
       
       return res.status(409).json({
-        error: `Doctor '${doctorName}' is already booked at this time. Suggested alternative doctors for '${serviceNeeded}':`,
+        error: `Doctor '${doctorName}' is already booked at this time.`,
         alternatives: fallbackNames.length ? fallbackNames : ['No alternatives available']
       });
     }

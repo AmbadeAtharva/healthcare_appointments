@@ -55,7 +55,7 @@ export default function ScheduleAppointment({ onScheduled }) {
 
       if (alternativeDoctors && alternativeDoctors.length > 0) {
         const suggestion = `Suggested alternative doctors: ${alternativeDoctors.join(', ')}`;
-        toast.error(errorMessage + ' ' + suggestion);
+        toast.error(errorMessage);
         setFallbackMessage(suggestion);  // Show inline
       } else {
         toast.error(errorMessage);
