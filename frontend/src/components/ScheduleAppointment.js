@@ -55,7 +55,6 @@ export default function ScheduleAppointment({ onScheduled }) {
 
       if (alternativeDoctors && alternativeDoctors.length > 0) {
         const suggestion = `Suggested alternative doctors: ${alternativeDoctors.join(', ')}`;
-        toast.error(errorMessage + ' ' + suggestion);
         setFallbackMessage(suggestion);  // Show inline
       } else {
         toast.error(errorMessage);
@@ -89,6 +88,8 @@ export default function ScheduleAppointment({ onScheduled }) {
         <input className="form-control" type="text" placeholder="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} style={{ maxWidth: '200px' }} />
         <button type="submit" className="btn btn-primary">Schedule</button>
       </form>
+
+      {fallbackMessage && <div className="alert alert-warning mt-2 text-center">{fallbackMessage}</div>}
       
       <ToastContainer position="top-center" />
     </div>
