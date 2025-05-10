@@ -46,8 +46,18 @@ function ScheduleAppointment({ onScheduled }) {
       onScheduled();
     } catch (error) {
       console.error(error);
-      setMessage(error.response?.data?.error || 'Failed to schedule appointment.');
+    
+      const errorMessage = error.response?.data?.error || 'Failed to schedule appointment.';
+      const alternatives = error.response?.data?.alternatives;
+    
+      let fullMessage = errorMessage;
+      if (alternatives && alternatives.length > 0 && alternatives[0] !== 'No alternatives available') {
+        fullMessage += ' ' + alternatives.join(', ');
+      }
+    
+      setMessage(fullMessage);
     }
+    
   };
 
   return (

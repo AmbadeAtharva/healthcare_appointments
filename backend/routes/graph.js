@@ -211,6 +211,7 @@ router.post('/appointments', async (req, res) => {
       
       const fallbackNames = alternativeDoctors.map(d => d.name ? d.name[0] : 'Unnamed Doctor');
       
+      
       console.log('Fallback doctor suggestions:', fallbackNames);
       
       return res.status(409).json({
