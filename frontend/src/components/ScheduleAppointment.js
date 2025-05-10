@@ -36,7 +36,7 @@ export default function ScheduleAppointment({ onScheduled }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFallbackMessage('');
+    setFallbackMessage('');  // Clear previous fallback message
 
     if (!patientName || !doctorName || !serviceNeeded || !date || !time) {
       toast.error('All fields except location are required.');
@@ -47,22 +47,19 @@ export default function ScheduleAppointment({ onScheduled }) {
       const payload = { patientName, doctorName, serviceNeeded, date, time, location };
       const response = await axios.post('http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/appointments', payload);
       toast.success(response.data.message || 'Appointment created.');
-      setPatientName('');
-      setDoctorName('');
-      setServiceNeeded('');
-      setDate('');
-      setTime('');
-      setLocation('');
-      setFallbackMessage('');
       onScheduled();
     } catch (error) {
       console.error(error);
-      const fallbackMsg = error.response?.data?.message;
-      const alternatives = error.response?.data?.alternatives;
-      if (fallbackMsg && alternatives) {
-        setFallbackMessage(`${fallbackMsg} ${alternatives.join(', ')}`);
+      const errorMessage = error.response?.data?.error || 'Failed to schedule appointment.';
+      const alternativeDoctors = error.response?.data?.alternatives;
+
+      if (alternativeDoctors && alternativeDoctors.length > 0) {
+        const suggestion = `Suggested alternative doctors: ${alternativeDoctors.join(', ')}`;
+        toast.error(errorMessage + ' ' + suggestion);
+        setFallbackMessage(suggestion);  // Show inline
       } else {
-        toast.error(error.response?.data?.error || 'Failed to schedule appointment.');
+        toast.error(errorMessage);
+        setFallbackMessage(errorMessage);  // Show inline
       }
     }
   };
@@ -93,7 +90,8 @@ export default function ScheduleAppointment({ onScheduled }) {
         <button type="submit" className="btn btn-primary">Schedule</button>
       </form>
 
-      {fallbackMessage && <div className="alert alert-warning mt-3">{fallbackMessage}</div>}
+      {fallbackMessage && <div className="alert alert-warning mt-2 text-center">{fallbackMessage}</div>}
+      
       <ToastContainer position="top-center" />
     </div>
   );
