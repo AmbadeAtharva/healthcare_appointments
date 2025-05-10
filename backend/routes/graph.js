@@ -23,19 +23,71 @@ const __ = gremlin.process.statics;
 /** ---------------------- GET Queries ---------------------- **/
 
 // Initialize dummy data
+//http://ec2-54-84-168-70.compute-1.amazonaws.com:5001/api/graph/init-data
+
 router.get('/init-data', async (req, res) => {
   try {
     const g = getTraversal();
     const results = [];
 
-    const alice = await g.addV('patient').property('name', 'alice').property('age', 30).next();
-    const bob = await g.addV('patient').property('name', 'bob').property('age', 45).next();
+    // --- Patients ---
+    const alice = await g.addV('patient')
+      .property('name', 'alice')
+      .property('age', 30)
+      .next();
 
-    const smith = await g.addV('doctor').property('name', 'dr. smith').property('specialty', 'Cardiology').property('services', 'cardiology,general medicine').next();
-    const lee = await g.addV('doctor').property('name', 'dr. lee').property('specialty', 'Dermatology').property('services', 'dermatology,cosmetology').next();
+    const bob = await g.addV('patient')
+      .property('name', 'bob')
+      .property('age', 45)
+      .next();
 
-    results.push(await g.V(alice.value.id).addE('hasAppointment').to(__.V(smith.value.id)).property('date', '2025-05-10').property('time', '10:00 AM').property('location', 'Room 101').next());
-    results.push(await g.V(bob.value.id).addE('hasAppointment').to(__.V(lee.value.id)).property('date', '2025-05-12').property('time', '2:00 PM').property('location', 'Room 102').next());
+    results.push(alice, bob);
+
+    // --- Expanded Doctors ---
+    const doctorSpecs = [
+      { name: 'dr. alice walker', specialty: 'Cardiology' },
+      { name: 'dr. bob carter', specialty: 'Dermatology' },
+      { name: 'dr. charlie green', specialty: 'Pediatrics' },
+      { name: 'dr. diana prince', specialty: 'Orthopedics' },
+      { name: 'dr. ethan hunt', specialty: 'Neurology' },
+      { name: 'dr. frank ocean', specialty: 'General Practice' },
+      { name: 'dr. grace lee', specialty: 'Ophthalmology' },
+      { name: 'dr. harry potter', specialty: 'Oncology' },
+      { name: 'dr. isabel king', specialty: 'Cardiology' },
+      { name: 'dr. john doe', specialty: 'Orthopedics' },
+      { name: 'dr. karen smith', specialty: 'Pediatrics' },
+      { name: 'dr. leo messi', specialty: 'Sports Medicine' },
+      { name: 'dr. mary jane', specialty: 'Gynecology' },
+      { name: 'dr. nick fury', specialty: 'General Practice' },
+      { name: 'dr. olivia brown', specialty: 'Neurology' }
+    ];
+
+    for (const doc of doctorSpecs) {
+      const addedDoctor = await g.addV('doctor')
+        .property('name', doc.name)
+        .property('specialty', doc.specialty)
+        .next();
+      results.push(addedDoctor);
+    }
+
+    // --- Sample Appointments ---
+    results.push(await g.V(alice.value.id)
+      .addE('hasAppointment')
+      .to(__.V(results.find(r => r.value.label === 'doctor').value.id))
+      .property('date', '2025-05-10')
+      .property('time', '10:00 AM')
+      .property('location', '101')
+      .property('serviceRequired', 'Cardiology')
+      .next());
+
+    results.push(await g.V(bob.value.id)
+      .addE('hasAppointment')
+      .to(__.V(results.find(r => r.value.label === 'doctor').value.id))
+      .property('date', '2025-05-12')
+      .property('time', '2:00 PM')
+      .property('location', '102')
+      .property('serviceRequired', 'Dermatology')
+      .next());
 
     res.json({ message: 'Inserted patients, doctors, and appointments', results });
   } catch (err) {
@@ -43,6 +95,7 @@ router.get('/init-data', async (req, res) => {
     res.status(500).json({ error: 'Failed to insert data', details: err.message });
   }
 });
+
 
 // Get all patients
 router.get('/patients', async (req, res) => {
