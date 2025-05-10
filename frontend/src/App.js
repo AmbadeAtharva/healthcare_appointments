@@ -41,13 +41,13 @@ function App() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Healthcare Scheduler</h1>
+    <div className="centered-layout">
+      <h1 style={{ textAlign: 'center' }}>Healthcare Scheduler</h1>
       <ScheduleAppointment onScheduled={handleScheduled} />
-      <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} /> {/* << Corrected here */}
+      <AppointmentList refreshFlag={refreshFlag} onRefresh={handleScheduled} />
       <ToastContainer position="top-center" />
     </div>
-  );
+  );  
 }
 
 export default App;
